@@ -18,11 +18,6 @@ class Workout {
       months[this.date.getMonth()]
     } ${this.date.getDate()}`;
   }
-
-  //just to show you can interact with public interface
-  click() {
-    this.clicks++;
-  }
 }
 
 class Running extends Workout {
@@ -73,7 +68,13 @@ class App {
 
   //this gets called immediately when class is created so good place to do something that needs to happen immediately
   constructor() {
+    //get users position
     this._getPosition();
+
+    //get data from local storage
+    this._getLocalStorage();
+
+    //attache event handlers
     form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
@@ -101,6 +102,11 @@ class App {
 
     //handling clicks on map
     this.#map.on('click', this._showForm.bind(this));
+
+    //render existing markers
+    this.#workouts.forEach(work => {
+      this._renderWorkoutMarker(work);
+    });
   }
 
   _showForm(mapE) {
@@ -173,8 +179,11 @@ class App {
     //render workout on list
     this._renderWorkout(workout);
 
-    //clear input fields
+    //clear input fields and hide form
     this._hideForm();
+
+    //set local storage to all workouts
+    this._setLocalStorage();
   }
 
   _renderWorkoutMarker(workout) {
@@ -259,7 +268,27 @@ class App {
     });
   }
 
-  workout.click();
+  _setLocalStorage() {
+    //first argument is the name. second argument is string to store. JSON.strigify turns an object into a string.
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _getLocalStorage() {
+    //arugment here is what data was called. Matters if different types of data is stored. JSON.parse returns a string back into an object
+    const data = JSON.parse(localStorage.getItem('workouts'));
+    if (!data) return;
+    this.#workouts = data;
+    this.#workouts.forEach(work => {
+      this._renderWorkout(work);
+    });
+  }
+
+  //this is a public facing interface. Can be used to reset local storage.
+  reset() {
+    localStorage.removeItem('workouts');
+    //this will reload the page
+    location.reload();
+  }
 }
 
 const app = new App();
